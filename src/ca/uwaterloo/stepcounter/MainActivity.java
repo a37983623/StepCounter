@@ -1,5 +1,7 @@
 package ca.uwaterloo.stepcounter;
 
+import java.util.Arrays;
+
 import android.app.Activity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -18,6 +20,7 @@ public class MainActivity extends Activity
 	int numberOfStep=0;
 	TextView tv;
 	Button button;
+	LineGraphView graph;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
@@ -29,7 +32,7 @@ public class MainActivity extends Activity
 		
 		//Register sensor listener
 		SensorManager sm = (SensorManager)getSystemService(SENSOR_SERVICE);
-		Sensor LinerAcceleratormeter = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		Sensor LinerAcceleratormeter = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 		SensorEventListener a1 = new GeneralSensorEventListener();
 		sm.registerListener(a1, LinerAcceleratormeter,SensorManager.SENSOR_DELAY_FASTEST);
 		
@@ -38,8 +41,13 @@ public class MainActivity extends Activity
 		layout1.addView(tv);
 		tv.setText("Total number of steps: 0");
 		
+		graph = new LineGraphView(getApplicationContext(),100,Arrays.asList("Peak","Trough","Acceleration"));
+		layout1.addView(graph);
+		
+		
 		button = new Button(this);
 		button.setText("Clear");
+		layout1.addView(button);
 		button.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
@@ -55,19 +63,23 @@ public class MainActivity extends Activity
 	
 	public class GeneralSensorEventListener implements SensorEventListener
 	{
-		float filtData;
+		float filtData[] = new float[3];
 		@Override
 		public void onSensorChanged(SensorEvent event) 
 		{
 			switch (event.sensor.getType())
 			{
 			case (Sensor.TYPE_LINEAR_ACCELERATION):
-				filtData = Helper.LowPassFilter(event.values[1]);
-				numberOfStep += FiniteStateMachine.changeState(filtData);
+				filtData[2] = Helper.LowPassFilter(event.values[2]);
+				numberOfStep += FiniteStateMachine.changeState(filtData[2]);
 				break;
 			default: break;
 			}
 			tv.setText("Total number of steps: "+numberOfStep);
+			filtData[0] = 0.5f;
+			filtData[1] = -0.13f;
+			
+			graph.addPoint(filtData);
 		}
 		@Override
 		public void onAccuracyChanged(Sensor sensor, int accuracy) {}

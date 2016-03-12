@@ -21,6 +21,7 @@ public class MainActivity extends Activity
 	TextView tv;
 	Button button;
 	LineGraphView graph;
+	float direction;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
@@ -30,11 +31,13 @@ public class MainActivity extends Activity
 		
 		LinearLayout layout1 = ((LinearLayout)findViewById(R.id.layout1));
 		
-		//Register sensor listener
+		//Register liner acceleration sensor and rotation sensor sensor.
 		SensorManager sm = (SensorManager)getSystemService(SENSOR_SERVICE);
 		Sensor LinerAcceleratormeter = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+		Sensor rotationvector = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 		SensorEventListener a1 = new GeneralSensorEventListener();
 		sm.registerListener(a1, LinerAcceleratormeter,SensorManager.SENSOR_DELAY_FASTEST);
+		sm.registerListener(a1, rotationvector,SensorManager.SENSOR_DELAY_NORMAL);
 		
 		//TextView setup
 		tv = new TextView(this);
@@ -44,7 +47,7 @@ public class MainActivity extends Activity
 		graph = new LineGraphView(getApplicationContext(),100,Arrays.asList("Peak","Trough","Acceleration"));
 		layout1.addView(graph);
 		
-		
+		//Set the button that clears the value when it is clicked.
 		button = new Button(this);
 		button.setText("Clear");
 		layout1.addView(button);
@@ -73,9 +76,13 @@ public class MainActivity extends Activity
 				filtData[2] = Helper.LowPassFilter(event.values[2]);
 				numberOfStep += FiniteStateMachine.changeState(filtData[2]);
 				break;
+			case (Sensor.TYPE_ROTATION_VECTOR):
+				direction = Helper.getDirection(event.values);
+				break;
 			default: break;
 			}
-			tv.setText("Total number of steps: "+numberOfStep);
+			tv.setText("Total number of steps: "+numberOfStep +
+					   "\nDirection: "+ (int)(direction*180/3.14));
 			filtData[0] = 0.5f;
 			filtData[1] = -0.13f;
 			

@@ -1,5 +1,7 @@
 package ca.uwaterloo.stepcounter;
 
+import android.hardware.SensorManager;
+
 public class Helper
 {
 	/*
@@ -11,5 +13,19 @@ public class Helper
 	{
 		currentValue = currentValue+(newValue-currentValue)/40;
 		return currentValue;
+	}
+	
+	
+	/*
+	 * Take input from rotation sensor;
+	 * Calculate the angle in radius from the north.
+	 * */
+	public static float getDirection(float[] rotationVector)
+	{
+		float[] direction = new float[9];
+		float[] rotationMatrix = new float[9];
+		SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVector);
+		SensorManager.getOrientation(rotationMatrix, direction);
+		return direction[0];
 	}
 }
